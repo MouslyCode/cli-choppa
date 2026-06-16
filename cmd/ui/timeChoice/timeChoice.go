@@ -12,14 +12,29 @@ var (
 			Background(lipgloss.Color("#890707")).
 			Bold(true).
 			Foreground(lipgloss.Color("#FAFAFA"))
+	baseStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#ffffff")).
+			Background(lipgloss.Color("#331717")).
+			Padding(0, 3).
+			Margin(3)
 	decideStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("#ffffff")).
 			Background(lipgloss.Color("#331717")).
-			Width(100)
+			Border(lipgloss.NormalBorder()).
+			Padding(0, 3).
+			Margin(3)
 	focusedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#890707")).
 			Bold(true)
+
+	bgContent = "Background Application Content\nLine 2 of the app layout\nLine 3 of the app layout"
+	bgLayer   = lipgloss.NewLayer(bgContent).
+			ID("background").
+			X(0).
+			Y(0).
+			Z(0)
 )
 
 type model struct {
@@ -83,8 +98,9 @@ func (m model) View() tea.View {
 	s := "I repat myself when i under stress\n\n"
 
 	// Iterate over our choices
-	for i, choice := range m.choices {
 
+	for i, choice := range m.choices {
+		choice = baseStyle.Render(choice)
 		// Is the cursor pointing at this choice?
 		cursor := "" // no cursor
 		if m.cursor == i {
@@ -102,7 +118,7 @@ func (m model) View() tea.View {
 		}
 
 		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		s += fmt.Sprintf("%s%s\n", cursor, checked, choice)
 	}
 
 	// The footer
