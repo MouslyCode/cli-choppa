@@ -1,40 +1,30 @@
 package timeChoice
 
 import (
-	"fmt"
-
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
 
-var (
-	selectedStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#890707")).
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA"))
-	baseStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#ffffff")).
-			Background(lipgloss.Color("#331717")).
-			Padding(0, 3).
-			Margin(3)
-	decideStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#ffffff")).
-			Background(lipgloss.Color("#331717")).
-			Border(lipgloss.NormalBorder()).
-			Padding(0, 3).
-			Margin(3)
-	focusedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#890707")).
-			Bold(true)
+const (
+	width       = 96
+	ColumnWidth = 30
+)
 
-	bgContent = "Background Application Content\nLine 2 of the app layout\nLine 3 of the app layout"
-	bgLayer   = lipgloss.NewLayer(bgContent).
-			ID("background").
-			X(0).
-			Y(0).
-			Z(0)
+var (
+	primary = lipgloss.Color("#890707")
+	dark    = lipgloss.Color("#1f0101")
+	grey    = lipgloss.Color("#151515")
+
+	baseChoice = lipgloss.NewStyle().
+			Padding(0, 1).
+			MarginLeft(2).
+			Background(dark)
+
+	activeChoice = baseChoice.Background(primary)
+
+	subTitle = lipgloss.NewStyle().
+			Foreground(primary).
+			Bold(true)
 )
 
 type model struct {
@@ -45,7 +35,7 @@ type model struct {
 
 func InitialModel(choices []string, selected map[int]struct{}) model {
 	return model{
-		choices:  []string{"Pomodoro", "Short Break", "Long Break"},
+		choices:  []string{" Pomodoro ", " Short Break ", " Long Break "},
 		selected: make(map[int]struct{}),
 	}
 }
@@ -94,35 +84,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() tea.View {
-	// The header
-	s := "I repat myself when i under stress\n\n"
 
-	// Iterate over our choices
-
-	for i, choice := range m.choices {
-		choice = baseStyle.Render(choice)
-		// Is the cursor pointing at this choice?
-		cursor := "" // no cursor
-		if m.cursor == i {
-			cursor = focusedStyle.Render(">") // cursor!
-			if _, ok := m.selected[i]; !ok {
-				choice = decideStyle.Render(choice)
-			}
+	rendered := make([]string, len(m.choices))
+	for i, c := range m.choices {
+		if i == m.cursor {
+			rendered[i] = activeChoice.Render(c)
+		} else {
+			rendered[i] = baseChoice.Render(c)
 		}
-
-		// Is this choice selected?
-		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
-			checked = "x" // selected!
-			choice = selectedStyle.Render(choice)
-		}
-
-		// Render the row
-		s += fmt.Sprintf("%s%s\n", cursor, checked, choice)
 	}
 
+	row := lipgloss.JoinHorizontal(lipgloss.Center, rendered...)
+	row = lipgloss.PlaceHorizontal(width, lipgloss.Center, row)
+	header := lipgloss.PlaceHorizontal(width, lipgloss.Center, subTitle.Render("I repat myself when i under stress"))
+	footer := lipgloss.PlaceHorizontal(width, lipgloss.Center, "Press q to quit")
+
+	// The header
+	s := header + "\n\n"
+
+	// Content
+	s += row + "\n\n"
+
 	// The footer
-	s += "\nPress q to quit.\n"
+	s += "\n" + footer + "\n"
 
 	// Send the UI for rendering
 	return tea.NewView(s)
