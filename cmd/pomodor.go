@@ -14,20 +14,29 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const logo = `
+// const logo = `
 
- ____ ___ ____   ____ ___ ____  _     ___ _   _ _____
-|  _ \_ _/ ___| / ___|_ _|  _ \| |   |_ _| \ | | ____|
-| | | | |\___ \| |    | || |_) | |    | ||  \| |  _|
-| |_| | | ___) | |___ | ||  __/| |___ | || |\  | |___
-|____/___|____/ \____|___|_|   |_____|___|_| \_|_____|
+//  ____ ___ ____   ____ ___ ____  _     ___ _   _ _____
+// |  _ \_ _/ ___| / ___|_ _|  _ \| |   |_ _| \ | | ____|
+// | | | | |\___ \| |    | || |_) | |    | ||  \| |  _|
+// | |_| | | ___) | |___ | ||  __/| |___ | || |\  | |___
+// |____/___|____/ \____|___|_|   |_____|___|_| \_|_____|
 
-`
+// `
 
 var (
 	myFigure  = figure.NewFigure("Discipline", "mini", true)
+	strSub    = "I Repeat myself when i under stress"
 	logoStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#890707")).
+			Foreground(lipgloss.Color("#a73232")).
+			Bold(true)
+
+	subTitle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#981f1f")).
+			Bold(true)
+
+	timeStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFFFFF")).
 			Bold(true)
 )
 
@@ -35,20 +44,32 @@ var (
 var pomodorCmd = &cobra.Command{
 	Use:   "pomodor",
 	Short: "A pomodoro timer method",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `it just a timer for pomodoro technique`,
 	Run: func(cmd *cobra.Command, args []string) {
-		Row := lipgloss.PlaceHorizontal(96, lipgloss.Center, logoStyle.Render(myFigure.String()))
-		fmt.Printf("\n%s\n", Row)
-		p := tea.NewProgram(timeChoice.InitialModel([]string{"Pomodoro", "Short Break", "Long Break"}, make(map[int]struct{})))
 
-		if _, err := p.Run(); err != nil {
+		logoRow := lipgloss.PlaceHorizontal(96, lipgloss.Center, logoStyle.Render(myFigure.String()))
+		subTextRow := lipgloss.PlaceHorizontal(96, lipgloss.Center, subTitle.Render(strSub))
+		time := lipgloss.PlaceHorizontal(96, lipgloss.Center, timeStyle.Render("12:00"))
+		fmt.Printf("\n%s", logoRow)
+		fmt.Printf("\n%s\n", subTextRow)
+
+		result := &timeChoice.Selection{}
+
+		choice := tea.NewProgram(timeChoice.InitialModel([]string{"Pomodoro", "Short Break", "Long Break"}, make(map[int]struct{}), result))
+
+		if _, err := choice.Run(); err != nil {
 			fmt.Printf("Error mas, ikilo: %v", err)
 			os.Exit(1)
+		}
+
+		switch result.Choice {
+		case "Pomodoro":
+			fmt.Printf("%s POMODOR", time)
+		case "Short Break":
+			fmt.Printf("%s SHORT", time)
+		case "Long Break":
+			fmt.Printf("%s LONG", time)
+
 		}
 	},
 }

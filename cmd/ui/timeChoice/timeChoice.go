@@ -13,7 +13,6 @@ const (
 var (
 	primary = lipgloss.Color("#890707")
 	dark    = lipgloss.Color("#1f0101")
-	grey    = lipgloss.Color("#151515")
 
 	baseChoice = lipgloss.NewStyle().
 			Padding(0, 1).
@@ -21,22 +20,35 @@ var (
 			Background(dark)
 
 	activeChoice = baseChoice.Background(primary)
-
-	subTitle = lipgloss.NewStyle().
-			Foreground(primary).
-			Bold(true)
 )
+
+type Selection struct {
+	Choice string
+}
+
+func (s *Selection) Update(value string) {
+	s.Choice = value
+}
 
 type model struct {
 	choices  []string
 	cursor   int
 	selected map[int]struct{}
+
+	choice *Selection
 }
 
-func InitialModel(choices []string, selected map[int]struct{}) model {
+func InitialModel(choices []string, selected map[int]struct{}, result *Selection) model {
+	if choices == nil {
+		choices = []string{" Pomodoro ", " Short Break ", " Long Break "}
+	}
+	if selected == nil {
+		selected = make(map[int]struct{})
+	}
 	return model{
-		choices:  []string{" Pomodoro ", " Short Break ", " Long Break "},
-		selected: make(map[int]struct{}),
+		choices:  choices,
+		selected: selected,
+		choice:   result,
 	}
 }
 
@@ -52,18 +64,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Cool, what was the actual key pressed?
 		switch msg.String() {
 
-		// These keys should exit the program.
-		case "ctrl+c", "q":
+		case "q", "ctrl+c":
 			return m, tea.Quit
 
-		// The "up" and "k" keys move the cursor up
-		case "up", "k":
+		case "left", "j":
 			if m.cursor > 0 {
 				m.cursor--
 			}
 
-		// The "down" and "j" keys move the cursor down
-		case "down", "j":
+		case "right", "k":
 			if m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
@@ -96,17 +105,11 @@ func (m model) View() tea.View {
 
 	row := lipgloss.JoinHorizontal(lipgloss.Center, rendered...)
 	row = lipgloss.PlaceHorizontal(width, lipgloss.Center, row)
-	header := lipgloss.PlaceHorizontal(width, lipgloss.Center, subTitle.Render("I repat myself when i under stress"))
-	footer := lipgloss.PlaceHorizontal(width, lipgloss.Center, "Press q to quit")
-
-	// The header
-	s := header + "\n\n"
 
 	// Content
+	s := "\n"
 	s += row + "\n\n"
-
-	// The footer
-	s += "\n" + footer + "\n"
+	s += "\n"
 
 	// Send the UI for rendering
 	return tea.NewView(s)
